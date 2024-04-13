@@ -34,7 +34,7 @@ h1 {
   padding: 15px;
   margin-bottom: 15px;
   border-radius: 8px;
-  line-height: 0.5;
+  line-height: 1.2;
 }
 
 .user-message {
@@ -48,6 +48,15 @@ h1 {
   padding: 10px;
   border-radius: 8px;
   margin-bottom: 15px;
+}
+
+.bot-message p {
+  margin: 0;
+  margin-bottom: 3px;
+}
+
+.bot-message p:last-child {
+  margin-bottom: 0;
 }
 
 .bot-message pre {
@@ -128,4 +137,52 @@ textarea {
 
 button[type='submit'] {
   align-self: flex-end;
+}
+
+.container {
+  display: flex;
+}
+
+.side-panel {
+  width: 200px;
+  background-color: #f1f1f1;
+  padding: 20px;
+  margin-right: 20px;
+}
+
+.side-panel h2 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.side-panel ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.side-panel li {
+  cursor: pointer;
+  padding: 5px 0;
+}
+
+.main-content {
+  flex: 1;
+}
+
+.clear-history-button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #dc3545;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.clear-history-button:hover {
+  background-color: #c82333;
 }
