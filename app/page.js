@@ -10,6 +10,11 @@ const Home = () => {
     setChatHistory([]);
   };
   
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      handleSubmit(e);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -71,6 +76,8 @@ const Home = () => {
       <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+
           placeholder="Type your message..."
           rows={4}>
 
