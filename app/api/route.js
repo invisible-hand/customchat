@@ -8,18 +8,25 @@ export async function POST(request) {
       apiKey: process.env.ANTHROPIC_API_KEY,
     });
 
-    const messages = chatHistory.map((chat) => [
-      { role: 'user', content: chat.user },
-      { role: 'assistant', content: chat.bot },
-    ]).flat();
+    const filteredChatHistory = Array.isArray(chatHistory)
+      ? chatHistory.filter(
+          (chat) => chat.user.trim() !== '' && chat.bot.trim() !== ''
+        )
+      : [];
+
+    const messages = filteredChatHistory.length
+      ? filteredChatHistory
+          .map((chat) => [
+            { role: 'user', content: chat.user },
+            { role: 'assistant', content: chat.bot },
+          ])
+          .flat()
+      : [];
 
     messages.push({ role: 'user', content: input });
 
     const message = await anthropic.messages.create({
       model: 'claude-3-haiku-20240307',
-      // claude-3-haiku-20240307
-      // claude-3-sonnet-20240229
-      // claude-3-opus-20240229
       max_tokens: 1024,
       messages,
     });
@@ -36,5 +43,3 @@ export async function POST(request) {
     });
   }
 }
-
-
