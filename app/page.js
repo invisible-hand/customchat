@@ -16,6 +16,8 @@ const Home = () => {
 
   const handleNewChat = () => {
     setChatHistory([]);
+    const newChat = [];
+    setSavedChats([...savedChats, newChat]);
   };
 
   const handleKeyDown = (e) => {
@@ -40,11 +42,12 @@ const Home = () => {
   
       const botResponse = data.response;
       console.log(botResponse);
-      const updatedChatHistory = [...chatHistory, { user: input, bot: botResponse[0].text }];
+      const updatedChatHistory = [...chatHistory, { user: input, bot: botResponse }];
       setChatHistory(updatedChatHistory);
       setInput('');
   
-      const updatedSavedChats = [...savedChats, updatedChatHistory];
+      // Update the last entry in savedChats instead of appending a new entry
+      const updatedSavedChats = [...savedChats.slice(0, -1), updatedChatHistory];
       localStorage.setItem('chatHistory', JSON.stringify(updatedSavedChats));
       setSavedChats(updatedSavedChats);
     } else {
@@ -54,6 +57,7 @@ const Home = () => {
 
   const handleChatClick = (index) => {
     const selectedChat = savedChats[index];
+    console.log(selectedChat);
     setChatHistory(selectedChat);
   };
 
@@ -124,7 +128,7 @@ const Home = () => {
             placeholder="Type your message..."
             rows={4}
           ></textarea>
-          <button type="submit">Send</button>
+          <button type="submit">(Cmd + Enter) or Click</button>
         </form>
       </div>
     </div>
