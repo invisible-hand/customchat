@@ -164,7 +164,7 @@ const Home = () => {
       <div className="content">
         <div className="side-panel">
 
-          <h1>Chat History</h1>
+          <h2>Chat History</h2>
           <button className="new-chat-button" onClick={handleNewChat}>
             New Chat
           </button>
