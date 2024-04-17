@@ -2,11 +2,36 @@
 
 import { useState, useEffect } from 'react';
 
+
 const Home = () => {
   const [input, setInput] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
   const [savedChats, setSavedChats] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+
+  useEffect(() => {
+    const storedDarkMode = localStorage.getItem('darkMode');
+    if (storedDarkMode) {
+      setDarkMode(JSON.parse(storedDarkMode));
+    }
+  }, []);
+  
+  useEffect(() => {
+    if (darkMode) {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
+    localStorage.setItem('darkMode', JSON.stringify(darkMode));
+  }, [darkMode]);
+  
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+  };
+
+  
+
 
   useEffect(() => {
     const storedChats = localStorage.getItem('chatHistory');
@@ -97,14 +122,24 @@ const Home = () => {
     }
   };
 
+
+
   const handleChatClick = (index) => {
     if (savedChats.length > 0) {
-      const selectedChat = savedChats[index];
-      const chatName = selectedChat[0]?.user || `Chat ${index + 1}`;
-      console.log(`Selected chat: ${chatName}`);
+      const selectedChat = savedChats[index].slice(0);
       setChatHistory(selectedChat);
     }
   };
+
+
+  // const handleChatClick = (index) => {
+  //   if (savedChats.length > 0) {
+  //     const selectedChat = savedChats[index];
+  //     const chatName = selectedChat[0]?.user || `Chat ${index + 1}`;
+  //     console.log(`Selected chat: ${chatName}`);
+  //     setChatHistory(selectedChat);
+  //   }
+  // };
 
   const handleClearHistory = () => {
     localStorage.removeItem('chatHistory');
@@ -114,13 +149,25 @@ const Home = () => {
 
   return (
     <div className="container">
-      <header>
-        <h1>Custom Claude</h1>
-        <h2 className="model-name">Model: {process.env.NEXT_PUBLIC_MODEL_NAME}</h2>
-      </header>
+<header>
+  <div className="header-left">
+    <h1>Custom Claude</h1>
+    <h2 className="model-name">Model: {process.env.NEXT_PUBLIC_MODEL_NAME}</h2>
+  </div>
+  <div className="header-right">
+    <label className="switch">
+      <input type="checkbox" checked={darkMode} onChange={toggleDarkMode} />
+      <span className="slider"></span>
+    </label>
+  </div>
+</header>
       <div className="content">
         <div className="side-panel">
-          <h2>Chat History</h2>
+
+          <h1>Chat History</h1>
+          <button className="new-chat-button" onClick={handleNewChat}>
+            New Chat
+          </button>
           <ul>
             {savedChats.map((chat, index) => (
               <li key={index} onClick={() => handleChatClick(index)} className="chat-item">
@@ -133,9 +180,7 @@ const Home = () => {
           </button>
         </div>
         <div className="main-content">
-          <button className="new-chat-button" onClick={handleNewChat}>
-            New Chat
-          </button>
+
           <div className="chat-window">
             {chatHistory.map((chat, index) => (
               <div key={index}>
@@ -175,12 +220,16 @@ const Home = () => {
               placeholder="Type your message..."
               rows={4}
             ></textarea>
-            <button type="submit">(Cmd + Enter) or Click</button>
+            <button class="button-submit" type="submit">(Cmd + Enter) or Click</button>
           </form>
         </div>
       </div>
     </div>
   );
 };
+
+
+
+
 
 export default Home;
