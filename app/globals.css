@@ -34,9 +34,10 @@ header {
   margin-left: 10px;
 }
 .model-name {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 300;
   color: #666;
+  margin-right: 40px;
 }
 
 .content {
@@ -440,4 +441,12 @@ input:checked + .slider:before {
 
 .dark-mode .new-chat-button:hover {
   color: #13c22a;
+}
+
+.chat-item.selected {
+  background-color: #e0e0e0;
+}
+
+.dark-mode .chat-item.selected {
+  background-color: #555;
 }

@@ -14,6 +14,7 @@ const Home = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [apiKey, setApiKey] = useState('');
   const [modelName, setModelName] = useState('');
+  const [selectedChatIndex, setSelectedChatIndex] = useState(null);
 
 
   useEffect(() => {
@@ -178,12 +179,13 @@ useEffect(() => {
       const selectedChat = savedChats[index];
       if (selectedChat.messages) {
         setChatHistory(selectedChat.messages);
+        setSelectedChatIndex(index); // Set the selected chat index
       } else {
         setChatHistory([]);
+        setSelectedChatIndex(null); // Reset the selected chat index
       }
     }
   };
-
 
   // const handleChatClick = (index) => {
   //   if (savedChats.length > 0) {
@@ -225,9 +227,10 @@ useEffect(() => {
 <header>
   <div className="header-left">
     <h1>Custom Claude</h1>
-    <h2 className="model-name">Model: {modelName}</h2>
+    
   </div>
   <div className="header-right">
+  <h2 className="model-name">Model: {modelName}</h2>
     <label className="switch">
       <input type="checkbox" checked={darkMode} onChange={toggleDarkMode} />
       <span className="slider"></span>
@@ -247,7 +250,9 @@ useEffect(() => {
   </div>
   <ul>
   {savedChats.map((chat, index) => (
-    <li key={index} onClick={() => handleChatClick(index)} className="chat-item">
+    <li key={index} onClick={() => handleChatClick(index)} 
+    className={`chat-item ${selectedChatIndex === index ? 'selected' : ''}`}
+    >
       {chat.name}
     </li>
   ))}
