@@ -63,19 +63,36 @@ useEffect(() => {
     }
   }, []);
 
+
   const handleNewChat = () => {
-    // Clear the chat history only if it's not already clear
-    // This prevents adding duplicate chats if there's no new message yet
-    if (chatHistory.length > 0) {
-        const newChat = [...chatHistory];  // Copy the current chat history
-        setSavedChats(prevSavedChats => [...prevSavedChats, newChat]);  // Add the copied chat to saved chats
-        setChatHistory([]);  // Clear the current chat history for a new session
-    } else if (savedChats.length === 0 || savedChats[savedChats.length - 1].length !== 0) {
-        // If there is no chat history and the last saved chat is not empty, add a new empty chat
-        // This condition checks if the last saved chat is not empty to avoid adding consecutive empty chats
-        setSavedChats(prevSavedChats => [...prevSavedChats, []]);  // Add a new empty chat array
+    // Ensuring that a new chat is only created if the last chat is either not empty or doesn't exist
+    console.log(savedChats.length);
+    if (savedChats.length === 1) {
+      setSavedChats(prevSavedChats => {
+        //const newChat = { name: '', messages: [] };
+        const updatedChats = [...prevSavedChats, newChat];
+        localStorage.setItem('chatHistory', JSON.stringify(updatedChats)); // Update localStorage inside the callback
+        return updatedChats;
+      });
+      setChatHistory([]);
+    } else {
+      const newChat = { name: '', messages: [] };
+      // If the last entry is empty, do not add a new one, but ensure chatHistory is cleared
+      setChatHistory([]);
     }
-};
+  };
+
+  // old version where diplicates were created
+
+  // const handleNewChat = () => {
+  //   if (chatHistory.length > 0) {
+  //     const newChat = [...chatHistory];
+  //     setSavedChats(prevSavedChats => [...prevSavedChats, { name: '', messages: newChat }]);
+  //     setChatHistory([]);
+  //   } else if (savedChats.length === 0 || savedChats[savedChats.length - 1].messages.length !== 0) {
+  //     setSavedChats(prevSavedChats => [...prevSavedChats, { name: '', messages: [] }]);
+  //   }
+  // };
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
@@ -94,51 +111,54 @@ useEffect(() => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ input: `Summarize in five words or less: ${input}`, apiKey, modelName }),
+        body: JSON.stringify({ input: `Summarize the following message in five words or less to use as a chat name: ${input}`, apiKey, modelName }),
       });
   
       if (summaryResponse.ok) {
         const summaryData = await summaryResponse.json();
-        const summary = summaryData.response;
+        const chatName = summaryData.response.trim();
   
-        const updatedSavedChats = [...savedChats, [{ user: summary, bot: '' }, { user: input, bot: '' }]];
+        const newChat = { name: chatName, messages: [] };
+        const updatedSavedChats = [...savedChats, newChat];
         setSavedChats(updatedSavedChats);
         localStorage.setItem('chatHistory', JSON.stringify(updatedSavedChats));
   
-        setChatHistory([{ user: input, bot: '' }]);
+        setChatHistory(newChat.messages);
   
-        const botResponse = await handleRegularSubmit(input, [{ user: input, bot: '' }]);
+        const botResponse = await handleRegularSubmit(input, newChat.messages);
         const updatedChatHistory = [{ user: input, bot: botResponse }];
         setChatHistory(updatedChatHistory);
   
-        const updatedSavedChatsWithResponse = [...savedChats, [{ user: summary, bot: '' }, ...updatedChatHistory]];
+        const updatedSavedChatsWithResponse = updatedSavedChats.map((chat) =>
+          chat.name === chatName ? { ...chat, messages: updatedChatHistory } : chat
+        );
         localStorage.setItem('chatHistory', JSON.stringify(updatedSavedChatsWithResponse));
         setSavedChats(updatedSavedChatsWithResponse);
       } else {
         console.error('Error:', summaryResponse.statusText);
       }
     } else {
-      const botResponse = await handleRegularSubmit(input, [...chatHistory, { user: input, bot: '' }]);
+      const botResponse = await handleRegularSubmit(input, chatHistory);
       const updatedChatHistory = [...chatHistory, { user: input, bot: botResponse }];
       setChatHistory(updatedChatHistory);
-
+  
       const updatedSavedChats = savedChats.map((chat, index) =>
-        index === savedChats.length - 1 ? updatedChatHistory : chat
+        index === savedChats.length - 1 ? { ...chat, messages: updatedChatHistory } : chat
       );
       localStorage.setItem('chatHistory', JSON.stringify(updatedSavedChats));
       setSavedChats(updatedSavedChats);
     }
-
+  
     setIsLoading(false);
   };
 
-  const handleRegularSubmit = async (input, chatHistory) => {
+  const handleRegularSubmit = async (input, chatMessages) => {
     const response = await fetch('/api', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ input, chatHistory, apiKey, modelName  }),
+      body: JSON.stringify({ input, chatHistory: chatMessages, apiKey, modelName }),
     });
 
     if (response.ok) {
@@ -155,8 +175,12 @@ useEffect(() => {
 
   const handleChatClick = (index) => {
     if (savedChats.length > 0) {
-      const selectedChat = savedChats[index].slice(0);
-      setChatHistory(selectedChat);
+      const selectedChat = savedChats[index];
+      if (selectedChat.messages) {
+        setChatHistory(selectedChat.messages);
+      } else {
+        setChatHistory([]);
+      }
     }
   };
 
@@ -222,11 +246,11 @@ useEffect(() => {
     </h2>
   </div>
   <ul>
-    {savedChats.map((chat, index) => (
-        <li key={index} onClick={() => handleChatClick(index)} className="chat-item">
-            {chat.length > 0 && chat[0].user ? chat[0].user.charAt(0).toUpperCase() + chat[0].user.slice(1) : `Chat ${index + 1}`}
-        </li>
-    ))}
+  {savedChats.map((chat, index) => (
+    <li key={index} onClick={() => handleChatClick(index)} className="chat-item">
+      {chat.name}
+    </li>
+  ))}
 </ul>
 </div>
         <div className="main-content">
