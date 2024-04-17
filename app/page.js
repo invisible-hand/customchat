@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import SettingsModal from './SettingsModal';
+
 
 
 const Home = () => {
@@ -9,6 +11,10 @@ const Home = () => {
   const [savedChats, setSavedChats] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [apiKey, setApiKey] = useState('');
+  const [modelName, setModelName] = useState('');
+
 
   useEffect(() => {
     const storedDarkMode = localStorage.getItem('darkMode');
@@ -16,6 +22,23 @@ const Home = () => {
       setDarkMode(JSON.parse(storedDarkMode));
     }
   }, []);
+
+useEffect(() => {
+  const storedModelName = localStorage.getItem('modelName');
+  if (storedModelName) {
+    setModelName(storedModelName);
+  } else {
+    setModelName('claude-3-haiku-20240307');
+  }
+}, []);
+
+  useEffect(() => {
+    const storedApiKey = localStorage.getItem('apiKey');
+    if (storedApiKey) {
+      setApiKey(storedApiKey);
+    }
+  }, []);
+
   
   useEffect(() => {
     if (darkMode) {
@@ -41,10 +64,18 @@ const Home = () => {
   }, []);
 
   const handleNewChat = () => {
-    setChatHistory([]);
-    const newChat = [];
-    setSavedChats([...savedChats, newChat]);
-  };
+    // Clear the chat history only if it's not already clear
+    // This prevents adding duplicate chats if there's no new message yet
+    if (chatHistory.length > 0) {
+        const newChat = [...chatHistory];  // Copy the current chat history
+        setSavedChats(prevSavedChats => [...prevSavedChats, newChat]);  // Add the copied chat to saved chats
+        setChatHistory([]);  // Clear the current chat history for a new session
+    } else if (savedChats.length === 0 || savedChats[savedChats.length - 1].length !== 0) {
+        // If there is no chat history and the last saved chat is not empty, add a new empty chat
+        // This condition checks if the last saved chat is not empty to avoid adding consecutive empty chats
+        setSavedChats(prevSavedChats => [...prevSavedChats, []]);  // Add a new empty chat array
+    }
+};
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
@@ -56,33 +87,31 @@ const Home = () => {
     e.preventDefault();
     setInput('');
     setIsLoading(true);
-
+  
     if (chatHistory.length === 0) {
       const summaryResponse = await fetch('/api', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ input: `Summarize in five words or less: ${input}` }),
+        body: JSON.stringify({ input: `Summarize in five words or less: ${input}`, apiKey, modelName }),
       });
-
+  
       if (summaryResponse.ok) {
         const summaryData = await summaryResponse.json();
         const summary = summaryData.response;
-
+  
         const updatedSavedChats = [...savedChats, [{ user: summary, bot: '' }, { user: input, bot: '' }]];
         setSavedChats(updatedSavedChats);
         localStorage.setItem('chatHistory', JSON.stringify(updatedSavedChats));
-
+  
         setChatHistory([{ user: input, bot: '' }]);
-
+  
         const botResponse = await handleRegularSubmit(input, [{ user: input, bot: '' }]);
         const updatedChatHistory = [{ user: input, bot: botResponse }];
         setChatHistory(updatedChatHistory);
-
-        const updatedSavedChatsWithResponse = savedChats.map((chat, index) =>
-          index === savedChats.length - 1 ? [{ user: summary, bot: '' }, ...updatedChatHistory] : chat
-        );
+  
+        const updatedSavedChatsWithResponse = [...savedChats, [{ user: summary, bot: '' }, ...updatedChatHistory]];
         localStorage.setItem('chatHistory', JSON.stringify(updatedSavedChatsWithResponse));
         setSavedChats(updatedSavedChatsWithResponse);
       } else {
@@ -109,7 +138,7 @@ const Home = () => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ input, chatHistory }),
+      body: JSON.stringify({ input, chatHistory, apiKey, modelName  }),
     });
 
     if (response.ok) {
@@ -147,38 +176,59 @@ const Home = () => {
     setChatHistory([]);
   };
 
+
+  const handleSettingsSave = (newApiKey, newModelName) => {
+    console.log('New Model Name:', newModelName);
+    setApiKey(newApiKey);
+    setModelName(newModelName);
+    localStorage.setItem('modelName', newModelName);
+    localStorage.setItem('apiKey', newApiKey);
+  };
+
+  const handleSettingsOpen = () => {
+    setIsSettingsOpen(true);
+  };
+
+  const handleSettingsClose = () => {
+    setIsSettingsOpen(false);
+  };
+
+
+
+
   return (
     <div className="container">
 <header>
   <div className="header-left">
     <h1>Custom Claude</h1>
-    <h2 className="model-name">Model: {process.env.NEXT_PUBLIC_MODEL_NAME}</h2>
+    <h2 className="model-name">Model: {modelName}</h2>
   </div>
   <div className="header-right">
     <label className="switch">
       <input type="checkbox" checked={darkMode} onChange={toggleDarkMode} />
       <span className="slider"></span>
     </label>
+    <button onClick={handleSettingsOpen}>Settings</button>
+
   </div>
 </header>
       <div className="content">
-        <div className="side-panel">
-
-          <h2>Chat History</h2>
-          <button className="new-chat-button" onClick={handleNewChat}>
-            New Chat
-          </button>
-          <ul>
-            {savedChats.map((chat, index) => (
-              <li key={index} onClick={() => handleChatClick(index)} className="chat-item">
-                {chat[0]?.user ? chat[0].user.charAt(0).toUpperCase() + chat[0].user.slice(1) : `Chat ${index + 1}`}
-              </li>
-            ))}
-          </ul>
-          <button className="clear-history-button" onClick={handleClearHistory}>
-            Clear History
-          </button>
-        </div>
+      <div className="side-panel">
+  <div className="side-panel-header">
+    <h2>Chat History
+    <button title="New chat" className="new-chat-button" onClick={handleNewChat}>
+      <i className="fas fa-file"></i>
+    </button>
+    </h2>
+  </div>
+  <ul>
+    {savedChats.map((chat, index) => (
+        <li key={index} onClick={() => handleChatClick(index)} className="chat-item">
+            {chat.length > 0 && chat[0].user ? chat[0].user.charAt(0).toUpperCase() + chat[0].user.slice(1) : `Chat ${index + 1}`}
+        </li>
+    ))}
+</ul>
+</div>
         <div className="main-content">
 
           <div className="chat-window">
@@ -220,10 +270,16 @@ const Home = () => {
               placeholder="Type your message..."
               rows={4}
             ></textarea>
-            <button class="button-submit" type="submit">(Cmd + Enter) or Click</button>
+            <button className="button-submit" type="submit">(Cmd + Enter) or Click</button>
           </form>
         </div>
       </div>
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={handleSettingsClose}
+        onSave={handleSettingsSave}
+        onClearHistory={handleClearHistory}
+      />
     </div>
   );
 };

@@ -1,11 +1,11 @@
 import Anthropic from '@anthropic-ai/sdk';
 
 export async function POST(request) {
-  const { input, chatHistory } = await request.json();
+  const { input, chatHistory, apiKey, modelName } = await request.json();
 
   try {
     const anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
+      apiKey: apiKey,
     });
 
     const filteredChatHistory = Array.isArray(chatHistory)
@@ -26,7 +26,7 @@ export async function POST(request) {
     messages.push({ role: 'user', content: input });
 
     const message = await anthropic.messages.create({
-      model: process.env.NEXT_PUBLIC_MODEL_NAME,
+      model: modelName,
       // model: 'claude-3-opus-20240229',
       max_tokens: 1024,
       messages,
