@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const SettingsModal = ({ isOpen, onClose, onSave, onClearHistory }) => {
+const SettingsModal = ({ isOpen, onClose, onSave, onClearHistory, darkMode }) => {
   const [apiKey, setApiKey] = useState('');
   const [modelName, setModelName] = useState('claude-3-haiku-20240307');
 
@@ -20,8 +20,8 @@ const SettingsModal = ({ isOpen, onClose, onSave, onClearHistory }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="modal">
-      <div className="modal-content">
+    <div className={`modal ${darkMode ? 'dark-mode' : ''}`}>
+      <div className={`modal-content ${darkMode ? 'dark-mode' : ''}`}>
         <h2>Settings</h2>
         <div className="modal-body">
           <div className="input-group">

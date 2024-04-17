@@ -67,7 +67,7 @@ useEffect(() => {
   const handleNewChat = () => {
     // Ensuring that a new chat is only created if the last chat is either not empty or doesn't exist
     console.log(savedChats.length);
-    if (savedChats.length === 1) {
+    if (savedChats.length === 0) {
       setSavedChats(prevSavedChats => {
         //const newChat = { name: '', messages: [] };
         const updatedChats = [...prevSavedChats, newChat];
