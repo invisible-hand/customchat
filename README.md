@@ -13,4 +13,8 @@
 
 ## Getting Started
 
-To run, type in ''' npm run dev ''' in the terminal.
+To run, type in the terminal:
+``` bash
+npm run dev
+``` 
+and navigate to http://localhost:3000.
