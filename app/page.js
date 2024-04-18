@@ -3,8 +3,6 @@
 import { useState, useEffect } from 'react';
 import SettingsModal from './SettingsModal';
 
-
-
 const Home = () => {
   const [input, setInput] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
@@ -15,7 +13,28 @@ const Home = () => {
   const [apiKey, setApiKey] = useState('');
   const [modelName, setModelName] = useState('');
   const [selectedChatIndex, setSelectedChatIndex] = useState(null);
+  const introChat = {
+    name: 'Welcome',
+    messages: [
+      {
+        user: 'What is Custom Claude?',
+        bot: `
+          "Custom Claude" is a client for Anthropic Claude models. 
 
+          - Use your own API key.
+          - Select a model from the list.
+          - Use dark/light mode.
+        
+          Notes:
+          - If you don't have Anthropic API key, get one here: https://docs.anthropic.com/claude/reference/getting-started-with-the-api
+          - Chat history is saved in LocalStorage and can be accessed from the side panel until cleared in Settings.
+          - Haiku is the default model.
+          - Opus is the best (but slowest).
+
+        `,
+      },
+    ],
+  };
 
   useEffect(() => {
     const storedDarkMode = localStorage.getItem('darkMode');
@@ -40,6 +59,17 @@ useEffect(() => {
     }
   }, []);
 
+  useEffect(() => {
+    const storedChats = localStorage.getItem('chatHistory');
+    if (storedChats) {
+      setSavedChats(JSON.parse(storedChats));
+    } else {
+      setSavedChats([introChat]);
+      setChatHistory(introChat.messages);
+    }
+  }, []);
+
+
   
   useEffect(() => {
     if (darkMode) {
@@ -55,8 +85,6 @@ useEffect(() => {
   };
 
   
-
-
   useEffect(() => {
     const storedChats = localStorage.getItem('chatHistory');
     if (storedChats) {
@@ -66,34 +94,19 @@ useEffect(() => {
 
 
   const handleNewChat = () => {
-    // Ensuring that a new chat is only created if the last chat is either not empty or doesn't exist
     console.log(savedChats.length);
     if (savedChats.length === 0) {
       setSavedChats(prevSavedChats => {
-        //const newChat = { name: '', messages: [] };
         const updatedChats = [...prevSavedChats, newChat];
         localStorage.setItem('chatHistory', JSON.stringify(updatedChats)); // Update localStorage inside the callback
         return updatedChats;
       });
       setChatHistory([]);
     } else {
-      const newChat = { name: '', messages: [] };
-      // If the last entry is empty, do not add a new one, but ensure chatHistory is cleared
+      // const newChat = { name: '', messages: [] };
       setChatHistory([]);
     }
   };
-
-  // old version where diplicates were created
-
-  // const handleNewChat = () => {
-  //   if (chatHistory.length > 0) {
-  //     const newChat = [...chatHistory];
-  //     setSavedChats(prevSavedChats => [...prevSavedChats, { name: '', messages: newChat }]);
-  //     setChatHistory([]);
-  //   } else if (savedChats.length === 0 || savedChats[savedChats.length - 1].messages.length !== 0) {
-  //     setSavedChats(prevSavedChats => [...prevSavedChats, { name: '', messages: [] }]);
-  //   }
-  // };
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
@@ -112,7 +125,7 @@ useEffect(() => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ input: `Summarize the following message in five words or less to use as a chat name: ${input}`, apiKey, modelName }),
+        body: JSON.stringify({ input: `Summarize the following message in six words or less to use as a chat name: ${input}. Do not include the summary in blockquotes.`, apiKey, modelName }),
       });
   
       if (summaryResponse.ok) {
@@ -187,14 +200,6 @@ useEffect(() => {
     }
   };
 
-  // const handleChatClick = (index) => {
-  //   if (savedChats.length > 0) {
-  //     const selectedChat = savedChats[index];
-  //     const chatName = selectedChat[0]?.user || `Chat ${index + 1}`;
-  //     console.log(`Selected chat: ${chatName}`);
-  //     setChatHistory(selectedChat);
-  //   }
-  // };
 
   const handleClearHistory = () => {
     localStorage.removeItem('chatHistory');
@@ -297,7 +302,7 @@ useEffect(() => {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Type your message..."
-              rows={4}
+              rows={2}
             ></textarea>
             <button className="button-submit" type="submit">(Cmd + Enter) or Click</button>
           </form>

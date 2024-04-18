@@ -40,9 +40,9 @@ const SettingsModal = ({ isOpen, onClose, onSave, onClearHistory, darkMode }) =>
               onChange={(e) => setModelName(e.target.value)}
               className="select-field"
             >
-              <option value="">Select a model</option>
-              <option value="claude-3-haiku-20240307">Claude Haiku</option>
-              <option value="claude-3-opus-20240229">Claude Opus</option>
+              <option value="claude-3-haiku-20240307">Claude Haiku (fast)</option>
+              <option value="claude-3-sonnet-20240229">Claude Sonnet (meh)</option>
+              <option value="claude-3-opus-20240229">Claude Opus (smart)</option>
               {/* Add more model options as needed */}
             </select>
           </div>
