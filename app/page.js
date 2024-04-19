@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import SettingsModal from './SettingsModal';
+import VariableModal from './VariableModal';
 
 const Home = () => {
   const [input, setInput] = useState('');
@@ -13,6 +14,10 @@ const Home = () => {
   const [apiKey, setApiKey] = useState('');
   const [modelName, setModelName] = useState('');
   const [selectedChatIndex, setSelectedChatIndex] = useState(null);
+  const [variables, setVariables] = useState([]);
+  const [isVariableModalOpen, setIsVariableModalOpen] = useState(false);
+  const [editingVariable, setEditingVariable] = useState(null);
+
   const introChat = {
     name: 'Welcome',
     messages: [
@@ -34,6 +39,27 @@ const Home = () => {
         `,
       },
     ],
+  };
+
+  const handleVariableClick = (variableName) => {
+    const textarea = document.querySelector('textarea');
+    const startPos = textarea.selectionStart;
+    const endPos = textarea.selectionEnd;
+    const text = textarea.value;
+    const before = text.substring(0, startPos);
+    const after = text.substring(endPos, text.length);
+    textarea.value = `${before}{${variableName}}${after}`;
+    textarea.selectionStart = textarea.selectionEnd = startPos + variableName.length + 2;
+    textarea.focus();
+    setInput(textarea.value);
+  };
+
+
+
+
+  const handleVariableEdit = (index) => {
+    setEditingVariable(variables[index]);
+    setIsVariableModalOpen(true);
   };
 
   useEffect(() => {
@@ -93,6 +119,49 @@ useEffect(() => {
   }, []);
 
 
+  useEffect(() => {
+    const storedVariables = localStorage.getItem('variables');
+    if (storedVariables) {
+      setVariables(JSON.parse(storedVariables));
+    }
+  }, []);
+
+
+
+
+  const handleAddVariable = (name, content) => {
+    if (editingVariable) {
+      setVariables((prevVariables) => {
+        const updatedVariables = prevVariables.map((variable) =>
+          variable.name === editingVariable.name ? { name, content } : variable
+        );
+        localStorage.setItem('variables', JSON.stringify(updatedVariables));
+        return updatedVariables;
+      });
+      setEditingVariable(null);
+    } else {
+      setVariables((prevVariables) => {
+        const updatedVariables = [...prevVariables, { name, content }];
+        localStorage.setItem('variables', JSON.stringify(updatedVariables));
+        return updatedVariables;
+      });
+    }
+    setIsVariableModalOpen(false);
+  };
+
+
+  const handleVariableDelete = (index) => {
+    setVariables((prevVariables) => {
+      const updatedVariables = [...prevVariables];
+      updatedVariables.splice(index, 1);
+      localStorage.setItem('variables', JSON.stringify(updatedVariables));
+      return updatedVariables;
+    });
+  };
+
+
+
+
   const handleNewChat = () => {
     console.log(savedChats.length);
     if (savedChats.length === 0) {
@@ -114,10 +183,22 @@ useEffect(() => {
     }
   };
 
+
+
+  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setInput('');
     setIsLoading(true);
+  
+    let updatedInput = input;
+    variables.forEach((variable) => {
+      updatedInput = updatedInput.replace(
+        new RegExp(`{${variable.name}}`, 'g'),
+        variable.content
+      );
+    });
   
     if (chatHistory.length === 0) {
       const summaryResponse = await fetch('/api', {
@@ -125,7 +206,11 @@ useEffect(() => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ input: `Summarize the following message in six words or less to use as a chat name: ${input}. Do not include the summary in blockquotes.`, apiKey, modelName }),
+        body: JSON.stringify({
+          input: `Summarize the following message in six words or less to use as a chat name: ${updatedInput}. Do not include the summary in blockquotes.`,
+          apiKey,
+          modelName,
+        }),
       });
   
       if (summaryResponse.ok) {
@@ -139,8 +224,8 @@ useEffect(() => {
   
         setChatHistory(newChat.messages);
   
-        const botResponse = await handleRegularSubmit(input, newChat.messages);
-        const updatedChatHistory = [{ user: input, bot: botResponse }];
+        const botResponse = await handleRegularSubmit(updatedInput, newChat.messages);
+        const updatedChatHistory = [{ user: updatedInput, bot: botResponse }];
         setChatHistory(updatedChatHistory);
   
         const updatedSavedChatsWithResponse = updatedSavedChats.map((chat) =>
@@ -152,8 +237,8 @@ useEffect(() => {
         console.error('Error:', summaryResponse.statusText);
       }
     } else {
-      const botResponse = await handleRegularSubmit(input, chatHistory);
-      const updatedChatHistory = [...chatHistory, { user: input, bot: botResponse }];
+      const botResponse = await handleRegularSubmit(updatedInput, chatHistory);
+      const updatedChatHistory = [...chatHistory, { user: updatedInput, bot: botResponse }];
       setChatHistory(updatedChatHistory);
   
       const updatedSavedChats = savedChats.map((chat, index) =>
@@ -165,6 +250,12 @@ useEffect(() => {
   
     setIsLoading(false);
   };
+
+
+
+
+
+
 
   const handleRegularSubmit = async (input, chatMessages) => {
     const response = await fetch('/api', {
@@ -229,6 +320,16 @@ useEffect(() => {
 
   return (
     <div className="container">
+<VariableModal
+  isOpen={isVariableModalOpen}
+  onClose={() => {
+    setIsVariableModalOpen(false);
+    setEditingVariable(null);
+  }}
+  onSave={handleAddVariable}
+  initialName={editingVariable?.name || ''}
+  initialContent={editingVariable?.content || ''}
+/>
 <header>
   <div className="header-left">
     <h1>Custom Claude</h1>
@@ -246,6 +347,45 @@ useEffect(() => {
 </header>
       <div className="content">
       <div className="side-panel">
+      <div className="side-panel-header">
+  <h2>Variables</h2>
+  <button
+    title="Add Variable"
+    className="add-variable-button"
+    onClick={() => setIsVariableModalOpen(true)}
+  >
+    <i className="fas fa-plus"></i>
+  </button>
+</div>
+<ul className="variable-list">
+  {variables.map((variable, index) => (
+    <li
+      key={index}
+      className="variable-item"
+      onClick={() => handleVariableClick(variable.name)}
+    >
+      <span className="variable-name">{variable.name}</span>
+      <span
+        className="edit-variable"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleVariableEdit(index);
+        }}
+      >
+        <i className="fas fa-edit"></i>
+      </span>
+      <span
+        className="delete-variable"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleVariableDelete(index);
+        }}
+      >
+        &times;
+      </span>
+    </li>
+  ))}
+</ul>
   <div className="side-panel-header">
     <h2>Chat History
     <button title="New chat" className="new-chat-button" onClick={handleNewChat}>

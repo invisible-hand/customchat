@@ -95,7 +95,7 @@ header {
   padding: 20px;
   border-radius: 8px;
   margin-bottom: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
 }
 
 .user-message,
@@ -481,4 +481,82 @@ input:checked + .slider:before {
 .dark-mode .save-button:hover,
 .dark-mode .cancel-button:hover {
   background-color: #666;
+}
+
+.add-variable-button {
+  background-color: transparent;
+  border: none;
+  color: #007bff;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.dark-mode .add-variable-button {
+  color: #fff;
+}
+
+.dark-mode .add-variable-button:hover {
+  color: #13c22a;
+}
+
+.variable-list {
+  list-style-type: none;
+  padding: 0;
+  margin-bottom: 20px;
+}
+
+.variable-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.variable-name {
+  display: inline-block;
+  padding: 5px 10px;
+  background-color: #007bff;
+  color: #fff;
+  border-radius: 4px;
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.edit-variable,
+.delete-variable {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 25px;
+  height: 25px;
+  background-color: #fff;
+  color: #007bff;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 25px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-left: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.edit-variable:hover,
+.delete-variable:hover {
+  background-color: #f1f1f1;
+}
+
+.edit-variable i {
+  font-size: 14px;
+}
+
+.dark-mode .edit-variable,
+.dark-mode .delete-variable {
+  background-color: #444;
+  color: #13c22a;
+}
+
+.dark-mode .edit-variable:hover,
+.dark-mode .delete-variable:hover {
+  background-color: #555;
 }
