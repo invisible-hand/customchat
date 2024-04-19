@@ -42,24 +42,32 @@ const Home = () => {
   };
 
   const handleVariableClick = (variableName) => {
-    const textarea = document.querySelector('textarea');
-    const startPos = textarea.selectionStart;
-    const endPos = textarea.selectionEnd;
-    const text = textarea.value;
-    const before = text.substring(0, startPos);
-    const after = text.substring(endPos, text.length);
-    textarea.value = `${before}{${variableName}}${after}`;
-    textarea.selectionStart = textarea.selectionEnd = startPos + variableName.length + 2;
-    textarea.focus();
-    setInput(textarea.value);
+    setInput(prevInput => {
+      const newText = `${prevInput}{${variableName}}`;
+  
+      // To ensure cursor position update
+      setTimeout(() => {
+        const textarea = document.querySelector('textarea');
+        if (textarea) {
+          textarea.focus();
+          const newCursorPos = newText.length;
+          textarea.setSelectionRange(newCursorPos, newCursorPos);
+        }
+      }, 0);
+  
+      return newText;
+    });
   };
-
-
-
-
-  const handleVariableEdit = (index) => {
-    setEditingVariable(variables[index]);
-    setIsVariableModalOpen(true);
+  
+  
+  const handleSettingsOpen = () => {
+    setIsSettingsOpen(true);
+    document.body.classList.add('modal-open');
+  };
+  
+  const handleSettingsClose = () => {
+    setIsSettingsOpen(false);
+    document.body.classList.remove('modal-open');
   };
 
   useEffect(() => {
@@ -69,14 +77,14 @@ const Home = () => {
     }
   }, []);
 
-useEffect(() => {
-  const storedModelName = localStorage.getItem('modelName');
-  if (storedModelName) {
-    setModelName(storedModelName);
-  } else {
-    setModelName('claude-3-haiku-20240307');
-  }
-}, []);
+  useEffect(() => {
+    const storedModelName = localStorage.getItem('modelName');
+    if (storedModelName) {
+      setModelName(storedModelName);
+    } else {
+      setModelName('claude-3-haiku-20240307');
+    }
+  }, []);
 
   useEffect(() => {
     const storedApiKey = localStorage.getItem('apiKey');
@@ -89,14 +97,9 @@ useEffect(() => {
     const storedChats = localStorage.getItem('chatHistory');
     if (storedChats) {
       setSavedChats(JSON.parse(storedChats));
-    } else {
-      setSavedChats([introChat]);
-      setChatHistory(introChat.messages);
     }
   }, []);
 
-
-  
   useEffect(() => {
     if (darkMode) {
       document.body.classList.add('dark-mode');
@@ -105,18 +108,6 @@ useEffect(() => {
     }
     localStorage.setItem('darkMode', JSON.stringify(darkMode));
   }, [darkMode]);
-  
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-  };
-
-  
-  useEffect(() => {
-    const storedChats = localStorage.getItem('chatHistory');
-    if (storedChats) {
-      setSavedChats(JSON.parse(storedChats));
-    }
-  }, []);
 
 
   useEffect(() => {
@@ -126,8 +117,47 @@ useEffect(() => {
     }
   }, []);
 
+  useEffect(() => {
+    const storedChats = localStorage.getItem('chatHistory');
+    if (storedChats) {
+      setSavedChats(JSON.parse(storedChats));
+    } else {
+      setSavedChats([introChat]);
+      setChatHistory(introChat.messages);
+    }
+  }, []);
+  
+
+  
 
 
+
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+  };
+
+  const handleVariableEdit = (index) => {
+    setEditingVariable(variables[index]);
+    setIsVariableModalOpen(true);
+    document.body.classList.add('modal-open');
+  };
+  
+  const handleVariableModalClose = () => {
+    setIsVariableModalOpen(false);
+    setEditingVariable(null);
+    document.body.classList.remove('modal-open');
+  };
+
+  const handleVariableMouseEnter = (index) => {
+    const variableControls = document.querySelectorAll('.variable-controls')[index];
+    variableControls.classList.remove('hide');
+  };
+  
+  const handleVariableMouseLeave = (index) => {
+    const variableControls = document.querySelectorAll('.variable-controls')[index];
+    variableControls.classList.add('hide');
+  };
+  
 
   const handleAddVariable = (name, content) => {
     if (editingVariable) {
@@ -307,13 +337,7 @@ useEffect(() => {
     localStorage.setItem('apiKey', newApiKey);
   };
 
-  const handleSettingsOpen = () => {
-    setIsSettingsOpen(true);
-  };
 
-  const handleSettingsClose = () => {
-    setIsSettingsOpen(false);
-  };
 
 
 
@@ -322,10 +346,7 @@ useEffect(() => {
     <div className="container">
 <VariableModal
   isOpen={isVariableModalOpen}
-  onClose={() => {
-    setIsVariableModalOpen(false);
-    setEditingVariable(null);
-  }}
+  onClose={handleVariableModalClose}
   onSave={handleAddVariable}
   initialName={editingVariable?.name || ''}
   initialContent={editingVariable?.content || ''}
@@ -363,26 +384,30 @@ useEffect(() => {
       key={index}
       className="variable-item"
       onClick={() => handleVariableClick(variable.name)}
+      onMouseEnter={() => handleVariableMouseEnter(index)}
+      onMouseLeave={() => handleVariableMouseLeave(index)}
     >
       <span className="variable-name">{variable.name}</span>
-      <span
-        className="edit-variable"
-        onClick={(e) => {
-          e.stopPropagation();
-          handleVariableEdit(index);
-        }}
-      >
-        <i className="fas fa-edit"></i>
-      </span>
-      <span
-        className="delete-variable"
-        onClick={(e) => {
-          e.stopPropagation();
-          handleVariableDelete(index);
-        }}
-      >
-        &times;
-      </span>
+      <div className="variable-controls">
+        <span
+          className="edit-variable"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleVariableEdit(index);
+          }}
+        >
+          <i className="fas fa-edit"></i>
+        </span>
+        <span
+          className="delete-variable"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleVariableDelete(index);
+          }}
+        >
+          &times;
+        </span>
+      </div>
     </li>
   ))}
 </ul>

@@ -12,16 +12,17 @@ const VariableModal = ({ isOpen, onClose, onSave, initialName = '', initialConte
 
   const handleSave = () => {
     onSave(name, content);
+    onClose();
+
     setName('');
     setContent('');
+
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="modal">
+    <div className={`modal ${isOpen ? 'open' : ''}`}>
       <div className="modal-content">
-        <h2>Add Variable</h2>
+        <h2>{initialName ? 'Edit Variable' : 'Add Variable'}</h2>
         <div className="modal-body">
           <div className="input-group">
             <label>Name:</label>

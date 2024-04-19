@@ -17,10 +17,8 @@ const SettingsModal = ({ isOpen, onClose, onSave, onClearHistory, darkMode }) =>
     onClose();
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className={`modal ${darkMode ? 'dark-mode' : ''}`}>
+    <div className={`modal ${isOpen ? 'open' : ''} ${darkMode ? 'dark-mode' : ''}`}>
       <div className={`modal-content ${darkMode ? 'dark-mode' : ''}`}>
         <h2>Settings</h2>
         <div className="modal-body">
@@ -46,10 +44,8 @@ const SettingsModal = ({ isOpen, onClose, onSave, onClearHistory, darkMode }) =>
               {/* Add more model options as needed */}
             </select>
           </div>
-
         </div>
-        <div className="modal-footer ">
-          
+        <div className="modal-footer">
           <button onClick={onClearHistory} className="clear-history-button">
             Clear History
           </button>
@@ -59,7 +55,6 @@ const SettingsModal = ({ isOpen, onClose, onSave, onClearHistory, darkMode }) =>
           <button onClick={handleSave} className="save-button">
             Save
           </button>
-    
         </div>
       </div>
     </div>
