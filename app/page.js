@@ -237,7 +237,7 @@ const Home = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          input: `Summarize the following message in six words or less to use as a chat name: ${updatedInput}. Do not include the summary in blockquotes.`,
+          input: `Summarize the following message in six words or less to use as a chat name: ${updatedInput}. Do not include the summary in blockquotes. Do not use dot at the end.`,
           apiKey,
           modelName,
         }),
@@ -414,7 +414,7 @@ const Home = () => {
   <div className="side-panel-header">
     <h2>Chat History
     <button title="New chat" className="new-chat-button" onClick={handleNewChat}>
-      <i className="fas fa-file"></i>
+      <i className="fas fa-plus"></i>
     </button>
     </h2>
   </div>

@@ -51,7 +51,7 @@ header {
 
 .side-panel {
   width: 200px;
-  background-color: #f8f8f8;
+  background-color: #f1f1f1;
   padding: 20px;
   margin-right: 20px;
   border-radius: 8px;
@@ -167,14 +167,6 @@ button {
   transition: background-color 0.3s ease;
 }
 
-button:hover {
-  background-color: #0056b3;
-}
-
-.new-chat-button:hover {
-  background-color: transparent;
-  color: #13c22a;
-}
 
 form {
   display: flex;
@@ -261,18 +253,11 @@ body.dark-mode {
 }
 
 .dark-mode button {
-  background-color: #777;
   color: #fff;
+  background-color: #333;
 }
 
-.dark-mode button:hover {
-  background-color: #666;
-}
 
-.dark-mode .new-chat-button:hover {
-  background-color: transparent;
-  color: #13c22a;
-}
 
 .dark-mode .clear-history-button {
   background-color: #dc3545;
@@ -438,19 +423,28 @@ input:checked + .slider:before {
 }
 
 .side-panel-header {
-  display: flex;
-  align-items: center;
+  display:ruby;
   justify-content: space-between;
   margin-bottom: 10px;
+
 }
 
-.new-chat-button {
+.new-chat-button,
+.add-variable-button {
   background-color: transparent;
   border: none;
   color: #007bff;
   font-size: 16px;
   cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
 }
+
+
 
 .align-left {
   text-align: left;
@@ -471,12 +465,13 @@ input:checked + .slider:before {
   color: #fff;
   border-color: #555;
 }
-
+.dark-mode .add-variable-button, 
 .dark-mode .new-chat-button {
   background-color: transparent;
   color: #fff;
 }
 
+.dark-mode .add-variable-button:hover,
 .dark-mode .new-chat-button:hover {
   color: #13c22a;
 }
@@ -494,27 +489,6 @@ input:checked + .slider:before {
 .dark-mode .cancel-button {
   background-color: #777;
   color: #fff;
-}
-
-.dark-mode .save-button:hover,
-.dark-mode .cancel-button:hover {
-  background-color: #666;
-}
-
-.add-variable-button {
-  background-color: transparent;
-  border: none;
-  color: #007bff;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-.dark-mode .add-variable-button {
-  color: #fff;
-}
-
-.dark-mode .add-variable-button:hover {
-  color: #13c22a;
 }
 
 .variable-list {
@@ -540,6 +514,11 @@ input:checked + .slider:before {
   font-weight: bold;
   margin-right: 10px;
 }
+
+.dark-mode .variable-name {
+  background-color: #555;
+}
+
 
 .variable-controls {
   display: flex;
