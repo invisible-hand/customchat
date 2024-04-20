@@ -254,7 +254,7 @@ const Home = () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            input: `Summarize this in six words or less: ${updatedInput}. DO NOT USE QUOTES!`,
+            input: `DO NOT USE QUOTES! Summarize this in six words or less: ${updatedInput}. `,
             apiKey,
             modelName,
           }),
