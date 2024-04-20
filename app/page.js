@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import SettingsModal from './SettingsModal';
 import VariableModal from './VariableModal';
+import ReactMarkdown from 'react-markdown';
 
 const Home = () => {
   const [input, setInput] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
   const [savedChats, setSavedChats] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [apiKey, setApiKey] = useState('');
@@ -17,28 +17,29 @@ const Home = () => {
   const [variables, setVariables] = useState([]);
   const [isVariableModalOpen, setIsVariableModalOpen] = useState(false);
   const [editingVariable, setEditingVariable] = useState(null);
+  const chatEndRef = useRef(null);
+  const scrollToBottom = () => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   const introChat = {
     name: 'Welcome',
     messages: [
       {
-        user: 'What is Custom Claude?',
-        bot: `
-          "Custom Claude" is a client for Anthropic Claude models. 
-
-          - Use your own API key.
-          - Select a model from the list.
-          - Use dark/light mode.
-        
-          Notes:
-          - If you don't have Anthropic API key, get one here: https://docs.anthropic.com/claude/reference/getting-started-with-the-api
-          - Chat history is saved in LocalStorage and can be accessed from the side panel until cleared in Settings.
-          - Haiku is the default model.
-          - Opus is the best (but slowest).
-
+        user: 'What is this?',
+        bot: ` line one  
+          line one  
+          line two   
+          line three
         `,
       },
     ],
+  };
+
+  const handleClearChats = () => {
+    setSavedChats([]);
+    setChatHistory([]);
+    localStorage.removeItem('chatHistory'); // Remove chat history from local storage
   };
 
   const handleVariableClick = (variableName) => {
@@ -77,14 +78,14 @@ const Home = () => {
     }
   }, []);
 
-  useEffect(() => {
-    const storedModelName = localStorage.getItem('modelName');
-    if (storedModelName) {
-      setModelName(storedModelName);
-    } else {
-      setModelName('claude-3-haiku-20240307');
-    }
-  }, []);
+  // useEffect(() => {
+  //   const storedModelName = localStorage.getItem('modelName');
+  //   if (storedModelName) {
+  //     setModelName(storedModelName);
+  //   } else {
+  //     setModelName('claude-3-haiku-20240307');
+  //   }
+  // }, []);
 
   useEffect(() => {
     const storedApiKey = localStorage.getItem('apiKey');
@@ -127,9 +128,17 @@ const Home = () => {
     }
   }, []);
   
-
+  useEffect(() => {
+    scrollToBottom();
+  }, [chatHistory]);
   
-
+  const ChatMessage = ({ content }) => {
+    return (
+      <div className="chat-message">
+        <ReactMarkdown>{content}</ReactMarkdown>
+      </div>
+    );
+  };
 
 
   const toggleDarkMode = () => {
@@ -189,23 +198,36 @@ const Home = () => {
     });
   };
 
+  const handleInput = (e) => {
+    setInput(e.target.value);
+    const textarea = e.target;
+    textarea.style.height = 'auto'; // Reset the height
+    textarea.style.height = `${textarea.scrollHeight}px`; // Set the height to scroll height
+  };
+
 
 
 
   const handleNewChat = () => {
     console.log(savedChats.length);
     if (savedChats.length === 0) {
-      setSavedChats(prevSavedChats => {
-        const updatedChats = [...prevSavedChats, newChat];
-        localStorage.setItem('chatHistory', JSON.stringify(updatedChats)); // Update localStorage inside the callback
-        return updatedChats;
-      });
-      setChatHistory([]);
+        const newChat = { 
+            name: 'New Chat', // Give a default name or generate one dynamically
+            messages: [] // Initialize with an empty messages array
+        };
+        setSavedChats(prevSavedChats => {
+            const updatedChats = [...prevSavedChats, newChat];
+            localStorage.setItem('chatHistory', JSON.stringify(updatedChats)); // Update localStorage inside the callback
+            return updatedChats;
+        });
+        setChatHistory([]); // Assuming you want to reset the current chat history in the UI
     } else {
-      // const newChat = { name: '', messages: [] };
-      setChatHistory([]);
+        // Handle the case when there are already chats
+        // You might want to select a new chat or clear the current one
+        setChatHistory([]);
     }
-  };
+};
+
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
@@ -220,7 +242,6 @@ const Home = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setInput('');
-    setIsLoading(true);
   
     let updatedInput = input;
     variables.forEach((variable) => {
@@ -230,56 +251,62 @@ const Home = () => {
       );
     });
   
-    if (chatHistory.length === 0) {
-      const summaryResponse = await fetch('/api', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          input: `Summarize the following message in six words or less to use as a chat name: ${updatedInput}. Do not include the summary in blockquotes. Do not use dot at the end.`,
-          apiKey,
-          modelName,
-        }),
-      });
+    // Check if a new chat needs to be created
+    if (chatHistory.length === 0 && updatedInput.trim() !== '') {
+      // Attempt to summarize the chat content for a new chat name
+      let chatName = 'New Chat'; // Default chat name
   
-      if (summaryResponse.ok) {
-        const summaryData = await summaryResponse.json();
-        const chatName = summaryData.response.trim();
+      try {
+        const summaryResponse = await fetch('/api', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            input: `Summarize the following message in six words or less to use as a chat name: ${updatedInput}. Important: Do not use quotes in your reply! Do not reply to the question, merely summarize what it means and rephrase is needed.`,
+            apiKey,
+            modelName,
+          }),
+        });
   
-        const newChat = { name: chatName, messages: [] };
-        const updatedSavedChats = [...savedChats, newChat];
-        setSavedChats(updatedSavedChats);
-        localStorage.setItem('chatHistory', JSON.stringify(updatedSavedChats));
-  
-        setChatHistory(newChat.messages);
-  
-        const botResponse = await handleRegularSubmit(updatedInput, newChat.messages);
-        const updatedChatHistory = [{ user: updatedInput, bot: botResponse }];
-        setChatHistory(updatedChatHistory);
-  
-        const updatedSavedChatsWithResponse = updatedSavedChats.map((chat) =>
-          chat.name === chatName ? { ...chat, messages: updatedChatHistory } : chat
-        );
-        localStorage.setItem('chatHistory', JSON.stringify(updatedSavedChatsWithResponse));
-        setSavedChats(updatedSavedChatsWithResponse);
-      } else {
-        console.error('Error:', summaryResponse.statusText);
+        if (summaryResponse.ok) {
+          const summaryData = await summaryResponse.json();
+          chatName = summaryData.response.trim() || 'New Chat';
+        } else {
+          console.error('Error:', summaryResponse.statusText);
+        }
+      } catch (error) {
+        console.error('Error during summarization:', error);
       }
-    } else {
-      const botResponse = await handleRegularSubmit(updatedInput, chatHistory);
-      const updatedChatHistory = [...chatHistory, { user: updatedInput, bot: botResponse }];
-      setChatHistory(updatedChatHistory);
   
-      const updatedSavedChats = savedChats.map((chat, index) =>
-        index === savedChats.length - 1 ? { ...chat, messages: updatedChatHistory } : chat
-      );
-      localStorage.setItem('chatHistory', JSON.stringify(updatedSavedChats));
-      setSavedChats(updatedSavedChats);
+      const newChat = { name: chatName, messages: [] };
+      setSavedChats((prevSavedChats) => {
+        const updatedChats = [...prevSavedChats, newChat];
+        localStorage.setItem('chatHistory', JSON.stringify(updatedChats));
+        setSelectedChatIndex(updatedChats.length - 1); // Set the selected chat index to the newly created chat
+
+        return updatedChats;
+      });
+      setSelectedChatIndex(savedChats.length);
     }
   
-    setIsLoading(false);
+    // Now handle the message submission to LLM
+    const botResponse = await handleRegularSubmit(updatedInput, chatHistory);
+    const updatedChatHistory = [...chatHistory, { user: updatedInput, bot: botResponse }];
+  
+    // Update the current chat in savedChats
+    setSavedChats((prevSavedChats) => {
+      const updatedChats = prevSavedChats.map((chat, index) =>
+        index === selectedChatIndex ? { ...chat, messages: updatedChatHistory } : chat
+      );
+      localStorage.setItem('chatHistory', JSON.stringify(updatedChats));
+      return updatedChats;
+    });
+  
+    // Update the chatHistory state with the new message
+    setChatHistory(updatedChatHistory);
   };
+  
 
 
 
@@ -313,7 +340,7 @@ const Home = () => {
       const selectedChat = savedChats[index];
       if (selectedChat.messages) {
         setChatHistory(selectedChat.messages);
-        setSelectedChatIndex(index); // Set the selected chat index
+        setSelectedChatIndex(index); // Set the selected chat index to the clicked chat
       } else {
         setChatHistory([]);
         setSelectedChatIndex(null); // Reset the selected chat index
@@ -357,12 +384,12 @@ const Home = () => {
     
   </div>
   <div className="header-right">
-  <h2 className="model-name">Model: {modelName}</h2>
+  <h2 className="model-name">Model: llama3-8b-8192</h2>
     <label className="switch">
       <input type="checkbox" checked={darkMode} onChange={toggleDarkMode} />
       <span className="slider"></span>
     </label>
-    <button onClick={handleSettingsOpen}>Settings</button>
+    {/* <button onClick={handleSettingsOpen}>Settings</button> */}
 
   </div>
 </header>
@@ -417,6 +444,7 @@ const Home = () => {
       <i className="fas fa-plus"></i>
     </button>
     </h2>
+    
   </div>
   <ul>
   {savedChats.map((chat, index) => (
@@ -427,10 +455,27 @@ const Home = () => {
     </li>
   ))}
 </ul>
+<button className="clear-chats-button" onClick={handleClearChats}>
+        Clear Chat History
+      </button>
 </div>
         <div className="main-content">
-
-          <div className="chat-window">
+                    <div className="chat-window">
+              {chatHistory.length === 0 ? (
+                <div className="chat-placeholder">Something magical is about to happen...</div>
+              ) : (
+                chatHistory.map((chat, index) => (
+                  <div key={index} className="chat-message">
+                    <p className="user-message">{chat.user}</p>
+                    <div className="bot-message">
+                      <ReactMarkdown>{chat.bot}</ReactMarkdown>
+                    </div>
+                  </div>
+                ))
+              )}
+              <div ref={chatEndRef} />
+            </div>
+          {/* <div className="chat-window">
             {chatHistory.map((chat, index) => (
               <div key={index}>
                 <p className="user-message">{chat.user}</p>
@@ -459,26 +504,26 @@ const Home = () => {
                 </div>
               </div>
             ))}
-            {isLoading && <div className="loading-indicator">Loading...</div>}
-          </div>
+          </div> */}
           <form onSubmit={handleSubmit}>
             <textarea
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={handleInput} 
               onKeyDown={handleKeyDown}
               placeholder="Type your message..."
               rows={2}
+              style={{ overflow: 'hidden' }}
             ></textarea>
             <button className="button-submit" type="submit">(Cmd + Enter) or Click</button>
           </form>
         </div>
       </div>
-      <SettingsModal
+      {/* <SettingsModal
         isOpen={isSettingsOpen}
         onClose={handleSettingsClose}
         onSave={handleSettingsSave}
         onClearHistory={handleClearHistory}
-      />
+      /> */}
     </div>
   );
 };

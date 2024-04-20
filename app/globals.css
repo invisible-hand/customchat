@@ -6,6 +6,8 @@ body {
   margin: 0;
   padding: 0;
   background-color: #f7f7f7;
+  line-height: 1.3;
+  
 }
 
 h1 {
@@ -75,10 +77,12 @@ header {
   cursor: pointer;
   padding: 10px;
   transition: background-color 0.3s ease;
+  margin-top: 8px;
 }
 
 .chat-item:hover {
   background-color: #e0e0e0;
+  border-radius: 8px;
 }
 
 .chat-item i {
@@ -127,21 +131,21 @@ header {
   margin-bottom: 0;
 }
 
-.bot-message pre {
+/* .bot-message pre {
   background-color: #f1f1f1;
   padding: 8px;
   border-radius: 4px;
   font-family: monospace;
   white-space: pre-wrap;
   margin: 0;
-}
-
+} */
+/* 
 .bot-message code {
   background-color: #f1f1f1;
   padding: 2px 4px;
   border-radius: 4px;
   font-family: monospace;
-}
+} */
 
 textarea {
   padding: 15px;
@@ -178,7 +182,7 @@ button[type='submit'] {
   align-self: flex-end;
 }
 
-.clear-history-button {
+.clear-chats-button {
   margin-top: 20px;
   padding: 10px 20px;
   background-color: #dc3545;
@@ -259,13 +263,6 @@ body.dark-mode {
 
 
 
-.dark-mode .clear-history-button {
-  background-color: #dc3545;
-}
-
-.dark-mode .clear-history-button:hover {
-  background-color: #c82333;
-}
 
 .switch {
   position: relative;
@@ -584,3 +581,57 @@ input:checked + .slider:before {
 .variable-controls.hide {
   animation: hideControls 3s forwards;
 }
+
+.chat-message pre {
+  background-color: #f4f4f4;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.chat-placeholder {
+  color: lightgrey; /* Or use a specific grey color like #ccc or #d3d3d3 */
+  opacity: 1; /* Optional: Adjust the opacity to make it lighter/darker */
+}
+
+.chat-message {
+  /* Add padding inside the message to give text more room */
+  line-height: 1.6; /* Increase line height for better readability */
+  text-align: left; /* Align text to the left */
+  margin-bottom: 20px; /* Add some space between messages */
+}
+
+/* Adjustments for headings within chat messages */
+.chat-message h1,
+.chat-message h2,
+.chat-message h3,
+.chat-message h4,
+.chat-message h5 {
+  color: #333; /* Darker than the text color for contrast */
+  margin-top: 20px; /* Add top margin */
+  margin-bottom: 10px; /* Add bottom margin */
+  font-weight: bold; /* Make headings bold */
+}
+
+/* Adjustments for paragraphs within chat messages */
+.chat-message p {
+  margin-bottom: 10px; /* Add bottom margin to paragraphs */
+}
+
+.chat-message strong {
+font-weight:bold;
+font-size: medium;
+}
+
+.chat-message h1 {
+  font-weight:bolder;
+  font-size: large;
+  }
+
+  .dark-mode .clear-chats-button {
+    background-color: #555;
+  }
+  
+  .dark-mode .clear-chats-button:hover {
+    background-color: #444;
+  }
+  
