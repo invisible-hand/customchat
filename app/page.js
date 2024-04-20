@@ -78,15 +78,6 @@ const Home = () => {
     }
   }, []);
 
-  // useEffect(() => {
-  //   const storedModelName = localStorage.getItem('modelName');
-  //   if (storedModelName) {
-  //     setModelName(storedModelName);
-  //   } else {
-  //     setModelName('claude-3-haiku-20240307');
-  //   }
-  // }, []);
-
   useEffect(() => {
     const storedApiKey = localStorage.getItem('apiKey');
     if (storedApiKey) {
@@ -97,7 +88,13 @@ const Home = () => {
   useEffect(() => {
     const storedChats = localStorage.getItem('chatHistory');
     if (storedChats) {
-      setSavedChats(JSON.parse(storedChats));
+      const chats = JSON.parse(storedChats);
+      setSavedChats(chats);
+      setChatHistory(chats.length > 0 ? chats[0].messages : []);
+    } else {
+      localStorage.setItem('chatHistory', JSON.stringify([introChat]));
+      setSavedChats([introChat]);
+      setChatHistory(introChat.messages);
     }
   }, []);
 
@@ -208,26 +205,7 @@ const Home = () => {
 
 
 
-  const handleNewChat = () => {
-    console.log(savedChats.length);
-    if (savedChats.length === 0) {
-        const newChat = { 
-            name: 'New Chat', // Give a default name or generate one dynamically
-            messages: [] // Initialize with an empty messages array
-        };
-        setSavedChats(prevSavedChats => {
-            const updatedChats = [...prevSavedChats, newChat];
-            localStorage.setItem('chatHistory', JSON.stringify(updatedChats)); // Update localStorage inside the callback
-            return updatedChats;
-        });
-        setChatHistory([]); // Assuming you want to reset the current chat history in the UI
-    } else {
-        // Handle the case when there are already chats
-        // You might want to select a new chat or clear the current one
-        setChatHistory([]);
-    }
-};
-
+ 
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
@@ -237,25 +215,38 @@ const Home = () => {
 
 
 
+  const handleNewChat = () => {
+    // Default new chat with a placeholder name
+    const newChat = {
+      name: 'New Chat', // Temporary name until the first message
+      messages: []
+    };
+    setSavedChats((prevChats) => [...prevChats, newChat]);
+    setChatHistory([]);
+    setSelectedChatIndex(savedChats.length); // Set focus on the new chat
+  };
   
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setInput('');
   
-    let updatedInput = input;
+    let updatedInput = input.trim();
+    if (updatedInput === '') {
+      return; // Prevent empty chat submissions
+    }
+  
+    // Replace variables with their actual content
     variables.forEach((variable) => {
-      updatedInput = updatedInput.replace(
-        new RegExp(`{${variable.name}}`, 'g'),
-        variable.content
-      );
+      updatedInput = updatedInput.replace(new RegExp(`{${variable.name}}`, 'g'), variable.content);
     });
   
-    // Check if a new chat needs to be created
-    if (chatHistory.length === 0 && updatedInput.trim() !== '') {
-      // Attempt to summarize the chat content for a new chat name
-      let chatName = 'New Chat'; // Default chat name
-  
+    const botResponse = await handleRegularSubmit(updatedInput, chatHistory);
+    
+    // Check if it's a new chat without any messages or named 'New Chat'
+    const isNewChat = selectedChatIndex === null || (savedChats[selectedChatIndex] && savedChats[selectedChatIndex].name === 'New Chat');
+    
+    if (isNewChat && chatHistory.length === 0) {
+      // API call to dynamically name the chat based on the first message
       try {
         const summaryResponse = await fetch('/api', {
           method: 'POST',
@@ -263,7 +254,7 @@ const Home = () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            input: `Summarize the following message in six words or less to use as a chat name: ${updatedInput}. Important: Do not use quotes in your reply! Do not reply to the question, merely summarize what it means and rephrase is needed.`,
+            input: `Summarize this in six words or less: ${updatedInput}. DO NOT USE QUOTES!`,
             apiKey,
             modelName,
           }),
@@ -271,40 +262,34 @@ const Home = () => {
   
         if (summaryResponse.ok) {
           const summaryData = await summaryResponse.json();
-          chatName = summaryData.response.trim() || 'New Chat';
-        } else {
-          console.error('Error:', summaryResponse.statusText);
+          savedChats[savedChats.length - 1].name = summaryData.response.trim() || 'New Chat'; // Update last chat's name
         }
       } catch (error) {
         console.error('Error during summarization:', error);
       }
-  
-      const newChat = { name: chatName, messages: [] };
-      setSavedChats((prevSavedChats) => {
-        const updatedChats = [...prevSavedChats, newChat];
-        localStorage.setItem('chatHistory', JSON.stringify(updatedChats));
-        setSelectedChatIndex(updatedChats.length - 1); // Set the selected chat index to the newly created chat
-
-        return updatedChats;
-      });
-      setSelectedChatIndex(savedChats.length);
     }
   
-    // Now handle the message submission to LLM
-    const botResponse = await handleRegularSubmit(updatedInput, chatHistory);
-    const updatedChatHistory = [...chatHistory, { user: updatedInput, bot: botResponse }];
+    // Update chat messages
+    const newMessage = { user: updatedInput, bot: botResponse };
+    const updatedChatHistory = [...chatHistory, newMessage];
+    const updatedChats = savedChats.map((chat, index) =>
+      index === selectedChatIndex ? { ...chat, messages: updatedChatHistory } : chat
+    );
   
-    // Update the current chat in savedChats
-    setSavedChats((prevSavedChats) => {
-      const updatedChats = prevSavedChats.map((chat, index) =>
-        index === selectedChatIndex ? { ...chat, messages: updatedChatHistory } : chat
-      );
-      localStorage.setItem('chatHistory', JSON.stringify(updatedChats));
-      return updatedChats;
-    });
-  
-    // Update the chatHistory state with the new message
+    localStorage.setItem('chatHistory', JSON.stringify(updatedChats));
+    setSavedChats(updatedChats);
     setChatHistory(updatedChatHistory);
+  };
+  
+  
+  
+
+
+
+  const handleChatClick = (index) => {
+    const selectedChat = savedChats[index];
+    setChatHistory(selectedChat.messages);
+    setSelectedChatIndex(index);
   };
   
 
@@ -332,38 +317,6 @@ const Home = () => {
       return '';
     }
   };
-
-
-
-  const handleChatClick = (index) => {
-    if (savedChats.length > 0) {
-      const selectedChat = savedChats[index];
-      if (selectedChat.messages) {
-        setChatHistory(selectedChat.messages);
-        setSelectedChatIndex(index); // Set the selected chat index to the clicked chat
-      } else {
-        setChatHistory([]);
-        setSelectedChatIndex(null); // Reset the selected chat index
-      }
-    }
-  };
-
-
-  const handleClearHistory = () => {
-    localStorage.removeItem('chatHistory');
-    setSavedChats([]);
-    setChatHistory([]);
-  };
-
-
-  const handleSettingsSave = (newApiKey, newModelName) => {
-    console.log('New Model Name:', newModelName);
-    setApiKey(newApiKey);
-    setModelName(newModelName);
-    localStorage.setItem('modelName', newModelName);
-    localStorage.setItem('apiKey', newApiKey);
-  };
-
 
 
 
@@ -474,36 +427,6 @@ const Home = () => {
               )}
               <div ref={chatEndRef} />
             </div>
-          {/* <div className="chat-window">
-            {chatHistory.map((chat, index) => (
-              <div key={index}>
-                <p className="user-message">{chat.user}</p>
-                <div className="bot-message">
-                  {chat.bot.split('```').map((part, i) => {
-                    if (i % 2 === 1) {
-                      return (
-                        <pre key={i} className="code-block">
-                          {part}
-                        </pre>
-                      );
-                    } else {
-                      return part.split('\n').map((line, j) => {
-                        if (line.startsWith('**') && line.endsWith('**')) {
-                          return <h2 key={`${i}-${j}`}>{line.slice(2, -2)}</h2>;
-                        } else if (line.startsWith('*') && line.endsWith('*')) {
-                          return <em key={`${i}-${j}`}>{line.slice(1, -1)}</em>;
-                        } else if (line.trim() === '') {
-                          return <br key={`${i}-${j}`} />;
-                        } else {
-                          return <p key={`${i}-${j}`}>{line}</p>;
-                        }
-                      });
-                    }
-                  })}
-                </div>
-              </div>
-            ))}
-          </div> */}
           <form onSubmit={handleSubmit}>
             <textarea
               value={input}
