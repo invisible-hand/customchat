@@ -27,10 +27,10 @@ header {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
-  margin-left: 3%;
+
 }
 
-.header-left,
+.header-left 
 .header-right {
   display: flex;
   align-items: center;

@@ -380,18 +380,17 @@ const Home = () => {
 />
 <header>
   <div className="header-left">
-    <h1>Custom Claude</h1>
+    <h1>Llamachat</h1>
+    <h2 className="model-name">Model: llama3-8b-8192</h2>
+
     
   </div>
-  <div className="header-right">
-  <h2 className="model-name">Model: llama3-8b-8192</h2>
     <label className="switch">
       <input type="checkbox" checked={darkMode} onChange={toggleDarkMode} />
       <span className="slider"></span>
     </label>
     {/* <button onClick={handleSettingsOpen}>Settings</button> */}
 
-  </div>
 </header>
       <div className="content">
       <div className="side-panel">
