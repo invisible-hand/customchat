@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import SettingsModal from './SettingsModal';
 import VariableModal from './VariableModal';
 import ReactMarkdown from 'react-markdown';
 
@@ -60,16 +59,7 @@ const Home = () => {
     });
   };
   
-  
-  const handleSettingsOpen = () => {
-    setIsSettingsOpen(true);
-    document.body.classList.add('modal-open');
-  };
-  
-  const handleSettingsClose = () => {
-    setIsSettingsOpen(false);
-    document.body.classList.remove('modal-open');
-  };
+
 
   useEffect(() => {
     const storedDarkMode = localStorage.getItem('darkMode');
@@ -342,8 +332,6 @@ const Home = () => {
       <input type="checkbox" checked={darkMode} onChange={toggleDarkMode} />
       <span className="slider"></span>
     </label>
-    {/* <button onClick={handleSettingsOpen}>Settings</button> */}
-
 </header>
       <div className="content">
       <div className="side-panel">
@@ -440,12 +428,6 @@ const Home = () => {
           </form>
         </div>
       </div>
-      {/* <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={handleSettingsClose}
-        onSave={handleSettingsSave}
-        onClearHistory={handleClearHistory}
-      /> */}
     </div>
   );
 };
