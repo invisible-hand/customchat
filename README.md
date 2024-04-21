@@ -6,7 +6,7 @@
 
 ## Notes:
 
-- If you don't have Groq API key, get one here: https://console.groq.com/keysi
+- If you don't have Groq API key, get one here: https://console.groq.com/keys
 - Chat history and variables are saved in LocalStorage 
 - Variables are a cool way to reuse prompt components
 - Dark mode! Responsive!
