@@ -1,6 +1,6 @@
 ## "Llamachat " is a client for llama (or any other model) for Groq
 
-- Use your own api key (ROQ_API_KEY in .env.local)
+- Use your own api key (GROQ_API_KEY in .env.local)
 - Enjoy
 - Live version deployed here https://customchat.vercel.app/ (with my free api key - prepare for rate limits)
 
