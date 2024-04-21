@@ -28,7 +28,7 @@ export async function POST(request) {
     try {
         const response = await groq.chat.completions.create({
             messages: messages,
-            model: "llama3-8b-8192" // Ensure you use the correct model ID
+            model: "llama3-70b-8192" // Ensure you use the correct model ID
         });
 
         // Extract the last message content from the response

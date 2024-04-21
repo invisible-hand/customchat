@@ -13,7 +13,6 @@ const Home = () => {
   const [apiKey, setApiKey] = useState('');
   const [modelName, setModelName] = useState('');
   const [selectedChatIndex, setSelectedChatIndex] = useState(null);
-  const [variables, setVariables] = useState([]);
   const [isVariableModalOpen, setIsVariableModalOpen] = useState(false);
   const [editingVariable, setEditingVariable] = useState(null);
   const chatEndRef = useRef(null);
@@ -21,16 +20,32 @@ const Home = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const [variables, setVariables] = useState([
+    {
+      name: "obscure writers",
+      content: "write in the style of david foster wallace mixed with karl ove knausgaard mixed with witold gombrowitz. do no repeat the instructions"
+    },
+    {
+      name: "WWND",
+      content: "answer the question as if you are Napoleon Bonaparte, Emperor of France, one of the most energetic and strong willed humans ever lived. Base you answer on what you know about Napoleon and be as direct, impulsive and diplomatic as he was. Try to speak less French as most of the people are stupid and don't know this beautiful language. Also be concise and mindful of your time, you are the Emperor after all." 
+    }
+  ]);
+
+
   const introChat = {
     name: 'Welcome',
     messages: [
       {
         user: 'What is this?',
-        bot: ` line one  
-          line one  
-          line two   
-          line three
-        `,
+        bot: `Llamachat is a custom chat interface for llama3 via groq  
+        1. I tried to make it fast (next.js)   
+        2. Chat history and variables are saved in the LocalStorage    
+        3. Variables are a cool way to reuse prompt components - try it out    
+        4. Responsive    
+        5. Groq + llama3 is _awesome_  
+        6. [Tweet @ me](https://twitter.com/andreyzagoruiko)   
+        7. Thanks for checking it out
+      `,
       },
     ],
   };
@@ -101,7 +116,11 @@ const Home = () => {
   useEffect(() => {
     const storedVariables = localStorage.getItem('variables');
     if (storedVariables) {
-      setVariables(JSON.parse(storedVariables));
+      const parsedVariables = JSON.parse(storedVariables);
+      setVariables((prevVariables) => [
+        ...prevVariables,
+        ...parsedVariables.filter((variable) => !prevVariables.some((v) => v.name === variable.name))
+      ]);
     }
   }, []);
 
@@ -324,7 +343,7 @@ const Home = () => {
 <header>
   <div className="header-left">
     <h1>Llamachat</h1>
-    <h2 className="model-name">Model: llama3-8b-8192</h2>
+    <h2 className="model-name">Model: llama3-70b-8192</h2>
 
     
   </div>

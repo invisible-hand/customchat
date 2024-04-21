@@ -1,15 +1,15 @@
-## "Custom Claude" is a client for Anthropic Claude models.
+## "Llamachat " is a client for llama (or any other model) for Groq
 
-- Use your own API key.
-- Select a model from the list.
-- Use dark/light mode.
+- Use your own api key (ROQ_API_KEY in .env.local)
+- Enjoy
+- Live version deployed here https://customchat.vercel.app/ (with my free api key - prepare for rate limits)
 
 ## Notes:
 
-- If you don't have Anthropic API key, get one here: https://docs.anthropic.com/claude/reference/getting-started-with-the-api
-- Chat history is saved in LocalStorage and can be accessed from the side panel until cleared in Settings.
-- Haiku is the default model.
-- Opus is the best (but slowest).
+- If you don't have Groq API key, get one here: https://console.groq.com/keysi
+- Chat history and variables are saved in LocalStorage 
+- Variables are a cool way to reuse prompt components
+- Dark mode! Responsive!
 
 ## Getting Started
 
