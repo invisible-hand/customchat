@@ -2,15 +2,13 @@
 const Groq = require("groq-sdk");
 
 export async function POST(request) {
-  // const { input, chatHistory, apiKey, file } = await request.json();
-
   const formData = await request.formData();
   const input = formData.get('input');
   const chatHistory = JSON.parse(formData.get('chatHistory'));
   const apiKey = formData.get('apiKey');
   const file = formData.get('file');
 
-  console.log("Received file:", file); // Add this line to log the received file
+  console.log("Received file:", file);
 
   const groq = new Groq({
     apiKey: process.env.GROQ_API_KEY || apiKey
@@ -34,30 +32,24 @@ export async function POST(request) {
   }
 
   if (file) {
-    // Process the uploaded file and include it in the messages array
+    // Read the content of the uploaded file
+    const fileContent = await file.text();
+
+    // Include the file content in the messages array
     messages.push({
       role: 'user',
-      content: `File uploaded: ${file.name}`
+      content: `File uploaded: ${file.name}\n\nFile content:\n${fileContent}`
     });
 
-    // Add this block to log the file data
     console.log("File name:", file.name);
     console.log("File type:", file.type);
     console.log("File size:", file.size);
-
-    // Optionally, you can send the file to an external storage service or API
-    // and include the file URL in the messages array
-    // const fileUrl = await uploadFileToStorage(file);
-    // messages.push({
-    //   role: 'user',
-    //   content: `File URL: ${fileUrl}`
-    // });
   }
 
   try {
     const response = await groq.chat.completions.create({
       messages: messages,
-      model: "llama3-70b-8192" // Ensure you use the correct model ID
+      model: "llama3-70b-8192"
     });
 
     // Extract the last message content from the response
