@@ -2,6 +2,8 @@
 const Groq = require("groq-sdk");
 
 export async function POST(request) {
+  // const { input, chatHistory, apiKey, file } = await request.json();
+
   const formData = await request.formData();
   const input = formData.get('input');
   const chatHistory = JSON.parse(formData.get('chatHistory'));

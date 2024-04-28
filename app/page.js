@@ -243,71 +243,66 @@ const Home = () => {
     setSelectedChatIndex(savedChats.length); // Set focus on the new chat
   };
   
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setInput('');
 
-  let updatedInput = input.trim();
-  if (updatedInput === '') {
-    return; // Prevent empty chat submissions
-  }
 
-  // Replace variables with their actual content
-  variables.forEach((variable) => {
-    updatedInput = updatedInput.replace(new RegExp(`{${variable.name}}`, 'g'), variable.content);
-  });
-
-  const formData = new FormData();
-  formData.append('input', updatedInput);
-  formData.append('chatHistory', JSON.stringify(chatHistory));
-  formData.append('apiKey', apiKey);
-  if (uploadedFile) {
-    formData.append('file', uploadedFile);
-  }
-
-  const botResponse = await handleRegularSubmit(updatedInput, chatHistory, apiKey, uploadedFile);
-
-  // Check if it's a new chat without any messages or named 'New Chat'
-  const isNewChat = selectedChatIndex === null || (savedChats[selectedChatIndex] && savedChats[selectedChatIndex].name === 'New Chat');
-
-  if (isNewChat && chatHistory.length === 0) {
-    // API call to dynamically name the chat based on the first message
-    try {
-      const summaryResponse = await fetch('/api', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          input: `DO NOT USE QUOTES! Summarize this in six words or less: ${updatedInput}. `,
-          apiKey,
-          modelName,
-        }),
-      });
-
-      if (summaryResponse.ok) {
-        const summaryData = await summaryResponse.json();
-        savedChats[savedChats.length - 1].name = summaryData.response.trim() || 'New Chat'; // Update last chat's name
-      }
-    } catch (error) {
-      console.error('Error during summarization:', error);
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setInput('');
+  
+    let updatedInput = input.trim();
+    if (updatedInput === '') {
+      return; // Prevent empty chat submissions
     }
-  }
-
-  // Update chat messages
-  const newMessage = { user: updatedInput, bot: botResponse };
-  const updatedChatHistory = [...chatHistory, newMessage];
-  const updatedChats = savedChats.map((chat, index) =>
-    index === selectedChatIndex ? { ...chat, messages: updatedChatHistory } : chat
-  );
-
-  localStorage.setItem('chatHistory', JSON.stringify(updatedChats));
-  setSavedChats(updatedChats);
-  setChatHistory(updatedChatHistory);
-
-  // Reset the uploaded file
-  setUploadedFile(null);
-};
+  
+    // Replace variables with their actual content
+    variables.forEach((variable) => {
+      updatedInput = updatedInput.replace(new RegExp(`{${variable.name}}`, 'g'), variable.content);
+    });
+  
+    const botResponse = await handleRegularSubmit(updatedInput, chatHistory, apiKey, uploadedFile);
+  
+    // Check if it's a new chat without any messages or named 'New Chat'
+    const isNewChat = selectedChatIndex === null || (savedChats[selectedChatIndex] && savedChats[selectedChatIndex].name === 'New Chat');
+  
+    if (isNewChat && chatHistory.length === 0) {
+      // API call to dynamically name the chat based on the first message
+      try {
+        const summaryResponse = await fetch('/api/summarize', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            input: `DO NOT USE QUOTES! Summarize this in six words or less: ${updatedInput}. `,
+            apiKey,
+            modelName,
+          }),
+        });
+  
+        if (summaryResponse.ok) {
+          const summaryData = await summaryResponse.json();
+          savedChats[savedChats.length - 1].name = summaryData.response.trim() || 'New Chat'; // Update last chat's name
+        }
+      } catch (error) {
+        console.error('Error during summarization:', error);
+      }
+    }
+  
+    // Update chat messages
+    const newMessage = { user: updatedInput, bot: botResponse };
+    const updatedChatHistory = [...chatHistory, newMessage];
+    const updatedChats = savedChats.map((chat, index) =>
+      index === selectedChatIndex ? { ...chat, messages: updatedChatHistory } : chat
+    );
+  
+    localStorage.setItem('chatHistory', JSON.stringify(updatedChats));
+    setSavedChats(updatedChats);
+    setChatHistory(updatedChatHistory); // Update the chatHistory state
+  
+    // Reset the uploaded file
+    setUploadedFile(null);
+  };
   
   
   
@@ -340,7 +335,7 @@ const handleSubmit = async (e) => {
       method: 'POST',
       body: formData,
     });
-
+  
     if (response.ok) {
       const data = await response.json();
       console.log('LLM Response:', data.response);
