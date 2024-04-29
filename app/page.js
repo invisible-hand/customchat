@@ -453,19 +453,28 @@ const Home = () => {
               )}
               <div ref={chatEndRef} />
             </div>
-          <form onSubmit={handleSubmit}>
-            <textarea
-              value={input}
-              onChange={handleInput} 
-              onKeyDown={handleKeyDown}
-              placeholder="Type your message..."
-              rows={2}
-              style={{ overflow: 'hidden' }}
-            ></textarea>
-              <input type="file" onChange={handleFileUpload} />
-
-            <button className="button-submit" type="submit">(Cmd + Enter) or Click</button>
-          </form>
+            <form onSubmit={handleSubmit}>
+  <textarea
+    value={input}
+    onChange={handleInput}
+    onKeyDown={handleKeyDown}
+    placeholder="Type your message..."
+    rows={2}
+    style={{ overflow: 'hidden' }}
+  ></textarea>
+  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div style={{ display: 'flex', alignItems: 'center' }}>
+      <label htmlFor="file-upload" className="file-upload-label">
+        Choose File
+      </label>
+      <input id="file-upload" type="file" onChange={handleFileUpload} style={{ display: 'none' }} />
+      {uploadedFile && (
+        <span style={{ marginLeft: '10px', fontSize: '14px' }}>{uploadedFile.name}</span>
+      )}
+    </div>
+    <button className="button-submit" type="submit">(Cmd + Enter) or Click</button>
+  </div>
+</form>
         </div>
       </div>
     </div>
