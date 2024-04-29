@@ -45,8 +45,9 @@ const Home = () => {
         3. Variables are a cool way to reuse prompt components - try it out    
         4. Responsive    
         5. Groq + llama3 is _awesome_  
-        6. [Tweet @ me](https://twitter.com/andreyzagoruiko)   
-        7. Thanks for checking it out
+        6. You can upload small (mostly text) files in the chat. Be mindful of short context window.   
+        7. [Tweet @ me](https://twitter.com/andreyzagoruiko)   
+        8. Thanks for checking it out   
       `,
       },
     ],
